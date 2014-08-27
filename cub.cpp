@@ -2,6 +2,9 @@
 #include <GL/glut.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/opencv.hpp>
+#include <unistd.h>
+#include <opencv2/objdetect/objdetect.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 using namespace std;
 using namespace cv;
@@ -9,6 +12,10 @@ using namespace cv;
 GLfloat unghi;
 VideoCapture video(0);
 Mat frame;
+
+CascadeClassifier classifier("haarcascade_frontalface_alt_tree.xml");
+
+vector<Rect> detect;
 
 void Initialise(void)
 {
@@ -41,9 +48,7 @@ void timer(int value)
 	if (unghi > 360)
 		unghi = 0;
 
-	video >> frame;
-		imshow("gica", frame);
-		waitKey(1);
+	
 
 	glutPostRedisplay();
 	glutTimerFunc(2, timer, value + 1);
@@ -61,6 +66,30 @@ int main(int argc, char *argv[])
 	glutDisplayFunc(display);
 	glutTimerFunc(2, timer, 0);
 
-	glutMainLoop();
+	int pid = fork();
+
+	if (pid > 0)	
+	{
+		glutMainLoop();
+	}
+	else
+	{
+		while (true)
+		{
+			video >> frame;
+			resize(frame, frame, Size(0, 0), 0.5, 0.5);
+			cvtColor(frame, frame, CV_BGR2GRAY);
+			equalizeHist(frame, frame);
+			classifier.detectMultiScale(frame, detect, 1.1, 3, 0, Size(50, 50));
+			for (unsigned int i = 0; i < detect.size(); i++)
+			{
+				rectangle(frame, detect[i], Scalar(0, 255, 0));
+			}
+			imshow("gica", frame);
+			waitKey(1);
+		}
+	}
+
+	
 	return 0;
 }
