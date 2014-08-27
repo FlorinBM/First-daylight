@@ -1,7 +1,14 @@
 #include <iostream>
 #include <GL/glut.h>
+#include <opencv2/core/core.hpp>
+#include <opencv2/opencv.hpp>
 
 using namespace std;
+using namespace cv;
+
+GLfloat unghi;
+VideoCapture video(0);
+Mat frame;
 
 void Initialise(void)
 {
@@ -23,11 +30,23 @@ void display(void)
 	glLoadIdentity();
 	gluLookAt(5, 5, 5, 0, 0, 0, 0, 1, 0);
 	glColor3f(0, 0, 0);
-	glTranslatef(0, 0, 0);
-	glScalef(3, 2, 1);
-	glRotatef(30, 1, 0, 0);
+	glRotatef(unghi, 0, 1, 0);
 	glutWireTeapot(2);
 	glutSwapBuffers();
+}
+
+void timer(int value)
+{
+	unghi = unghi + 1;
+	if (unghi > 360)
+		unghi = 0;
+
+	video >> frame;
+		imshow("gica", frame);
+		waitKey(1);
+
+	glutPostRedisplay();
+	glutTimerFunc(2, timer, value + 1);
 }
 
 int main(int argc, char *argv[])
@@ -40,6 +59,7 @@ int main(int argc, char *argv[])
 	Initialise();
 	glutReshapeFunc(reshape);
 	glutDisplayFunc(display);
+	glutTimerFunc(2, timer, 0);
 
 	glutMainLoop();
 	return 0;
